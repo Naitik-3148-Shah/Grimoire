@@ -16,11 +16,13 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import android.content.Context
 
 class HabitRepository(
     private val database: GrimoireDatabase,
     private val habitDao: HabitDao = database.habitDao(),
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val context: Context? = null
 ) {
     private val transactionMutex = Mutex()
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE

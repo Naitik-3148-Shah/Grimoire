@@ -1,29 +1,45 @@
 package com.example.grimoire.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grimoire.data.local.GrimoireDatabase
 import com.example.grimoire.data.repository.HabitRepository
+import com.example.grimoire.data.vault.SovereignVaultManager
 import com.example.grimoire.model.HabitEvent
 import com.example.grimoire.model.HabitUiModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
+
+sealed interface VaultNotification {
+    data class Success(val message: String) : VaultNotification
+    data class Error(val error: String) : VaultNotification
+}
 
 class HabitViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = GrimoireDatabase.getInstance(application)
-    private val repository = HabitRepository(database)
+    private val repository = HabitRepository(database, context = application)
+    private val vaultManager = SovereignVaultManager(application, database)
 
-    // Exposes the exact StateFlow consumed by Naitik Maurya's Compose UI
+    // Reactive stream observed by Naitik Maurya's Compose UI & Widgets
     val habits: StateFlow<List<HabitUiModel>> = repository.habitsFlow
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    // One-time notification stream for Snackbars/Toast on export or restore
+    private val _vaultNotification = MutableSharedFlow<VaultNotification>()
+    val vaultNotification: SharedFlow<VaultNotification> = _vaultNotification.asSharedFlow()
 
     fun onEvent(event: HabitEvent) {
         viewModelScope.launch {
@@ -37,23 +53,45 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                         reminderTime = event.reminderTime
                     )
                 }
-                is HabitEvent.IncrementHabit -> {
-                    repository.incrementHabit(event.habitId)
-                }
-                is HabitEvent.DecrementHabit -> {
-                    repository.decrementHabit(event.habitId)
-                }
-                is HabitEvent.ToggleFreezeShield -> {
-                    repository.toggleFreezeShield(event.habitId)
-                }
-                is HabitEvent.DeleteHabit -> {
-                    repository.deleteHabit(event.habitId)
-                }
+                is HabitEvent.IncrementHabit -> repository.incrementHabit(event.habitId)
+                is HabitEvent.DecrementHabit -> repository.decrementHabit(event.habitId)
+                is HabitEvent.ToggleFreezeShield -> repository.toggleFreezeShield(event.habitId)
+                is HabitEvent.DeleteHabit -> repository.deleteHabit(event.habitId)
+
+                // Task A.3: Sovereign Vault Export Event Execution
                 is HabitEvent.ExportVaultToUri -> {
-                    // Handled in Phase 5 via SovereignVaultManager
+                    val uri = event.uriString.toUri()
+                    val result = vaultManager.exportVault(uri)
+                    result.fold(
+                        onSuccess = {
+                            _vaultNotification.emit(
+                                VaultNotification.Success("Sovereign Vault archived to local storage.")
+                            )
+                        },
+                        onFailure = { error ->
+                            _vaultNotification.emit(
+                                VaultNotification.Error("Export failed: ${error.localizedMessage ?: "Unknown I/O error"}")
+                            )
+                        }
+                    )
                 }
+
+                // Task A.3: Sovereign Vault Import Event Execution
                 is HabitEvent.ImportVaultFromUri -> {
-                    // Handled in Phase 5 via SovereignVaultManager
+                    val uri = event.uriString.toUri()
+                    val result = vaultManager.importVault(uri)
+                    result.fold(
+                        onSuccess = {
+                            _vaultNotification.emit(
+                                VaultNotification.Success("Sovereign Vault restored successfully.")
+                            )
+                        },
+                        onFailure = { error ->
+                            _vaultNotification.emit(
+                                VaultNotification.Error("Restore rejected: Corrupted schema or invalid JSON.")
+                            )
+                        }
+                    )
                 }
             }
         }
