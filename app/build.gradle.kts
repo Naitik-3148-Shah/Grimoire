@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sorcerers.grimoire"
+    namespace = "com.example.grimoire"
     compileSdk = 35
 
     defaultConfig {
