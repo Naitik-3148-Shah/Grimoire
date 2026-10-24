@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.grimoire.model.HabitUiModel
 
 private val AVAILABLE_ICONS = listOf(
     "book" to "Study",
@@ -74,14 +75,15 @@ private val ARCANE_PALETTE = listOf(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddHabitDialog(
+    initialHabit: HabitUiModel? = null,
     onDismiss: () -> Unit,
     onInscribe: (title: String, iconName: String, colorHex: String, targetPerDay: Int, reminderTime: String?) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var selectedIcon by remember { mutableStateOf("book") }
-    var selectedColor by remember { mutableStateOf("#D4AF37") }
-    var targetPerDay by remember { mutableIntStateOf(1) }
-    var reminderTime by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialHabit?.title ?: "") }
+    var selectedIcon by remember { mutableStateOf(initialHabit?.iconName ?: "book") }
+    var selectedColor by remember { mutableStateOf(initialHabit?.colorHex ?: "#D4AF37") }
+    var targetPerDay by remember { mutableIntStateOf(initialHabit?.targetPerDay ?: 1) }
+    var reminderTime by remember { mutableStateOf(initialHabit?.reminderTime ?: "") }
     var titleError by remember { mutableStateOf(false) }
 
     val activeColor = remember(selectedColor) { parseHexColor(selectedColor) }
@@ -97,7 +99,7 @@ fun AddHabitDialog(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Inscribe New Habit", fontWeight = FontWeight.Bold)
+                Text(text = if (initialHabit == null) "Inscribe New Habit" else "Edit Habit", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -272,7 +274,7 @@ fun AddHabitDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = activeColor, contentColor = Color.Black)
             ) {
-                Text(text = "Inscribe Seal", fontWeight = FontWeight.Bold)
+                Text(text = if (initialHabit == null) "Inscribe Seal" else "Update Seal", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {

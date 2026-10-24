@@ -48,6 +48,25 @@ class HabitRepository(
         habitDao.insertHabit(habit)
     }
 
+    suspend fun updateHabit(
+        habitId: Long,
+        title: String,
+        iconName: String,
+        colorHex: String,
+        targetPerDay: Int,
+        reminderTime: String?
+    ) = withContext(ioDispatcher) {
+        val existing = habitDao.getHabitById(habitId) ?: return@withContext
+        val updated = existing.copy(
+            title = title,
+            iconName = iconName,
+            colorHex = colorHex,
+            targetPerDay = targetPerDay.coerceAtLeast(1),
+            reminderTime = reminderTime
+        )
+        habitDao.updateHabit(updated)
+    }
+
     suspend fun incrementHabit(habitId: Long) = withContext(ioDispatcher) {
         transactionMutex.withLock {
             val today = LocalDate.now().format(dateFormatter)
