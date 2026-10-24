@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -92,6 +93,7 @@ fun getHabitIcon(iconName: String): ImageVector {
 @Composable
 fun HabitCard(
     habit: HabitUiModel,
+    onEdit: () -> Unit,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onToggleFreeze: () -> Unit,
@@ -119,7 +121,8 @@ fun HabitCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onEdit() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -185,16 +188,21 @@ fun HabitCard(
                     }
                 }
 
-                IconButton(
-                    onClick = { showDeleteConfirmDialog = true },
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete Habit",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp)
-                    )
+                // Edit & Delete Icons
+                Row {
+                    // Replaced with a unified Edit/Delete logic outside card (e.g. SwipeToDismiss or click)
+                    // We'll leave the delete button here for now, or just let caller handle click on the whole card
+                    IconButton(
+                        onClick = { showDeleteConfirmDialog = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Habit",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 
@@ -292,25 +300,26 @@ fun HabitCard(
                         if (habit.isCompletedToday) {
                             Surface(
                                 shape = CircleShape,
-                                color = Color(0xFF00E676).copy(alpha = 0.15f)
+                                color = if (isSystemInDarkTheme()) Color(0xFF1B5E20) else Color(0xFFE8F5E9),
+                                border = BorderStroke(1.dp, if (isSystemInDarkTheme()) Color(0xFF4CAF50) else Color(0xFF81C784))
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = "Completed",
-                                        tint = Color(0xFF00E676),
+                                        tint = if (isSystemInDarkTheme()) Color(0xFF69F0AE) else Color(0xFF2E7D32),
                                         modifier = Modifier.size(12.dp)
                                     )
                                     Spacer(modifier = Modifier.width(3.dp))
                                     Text(
                                         text = "Sealed",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color(0xFF00E676),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
+                                        color = if (isSystemInDarkTheme()) Color(0xFF69F0AE) else Color(0xFF2E7D32),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.ExtraBold
                                     )
                                 }
                             }

@@ -9,6 +9,15 @@ sealed interface HabitEvent {
         val reminderTime: String? = null
     ) : HabitEvent
 
+    data class EditHabit(
+        val habitId: Long,
+        val title: String,
+        val iconName: String,
+        val colorHex: String,
+        val targetPerDay: Int,
+        val reminderTime: String?
+    ) : HabitEvent
+
     data class IncrementHabit(val habitId: Long) : HabitEvent
     data class DecrementHabit(val habitId: Long) : HabitEvent
     data class ToggleFreezeShield(val habitId: Long) : HabitEvent
