@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SelfImprovement
@@ -109,20 +110,25 @@ fun HabitCard(
         label = "habitProgressAnimation"
     )
 
+    val isDarkTheme = isSystemInDarkTheme()
+
     val shieldBgColor by animateColorAsState(
-        targetValue = if (habit.isFrozen) Color(0xFF00E5FF).copy(alpha = 0.18f) else Color.Transparent,
+        targetValue = if (habit.isFrozen) {
+            if (isDarkTheme) Color(0xFF00E5FF).copy(alpha = 0.18f) else Color(0xFFE0F7FA)
+        } else Color.Transparent,
         label = "shieldBg"
     )
     val shieldBorderColor by animateColorAsState(
-        targetValue = if (habit.isFrozen) Color(0xFF00E5FF) else MaterialTheme.colorScheme.outlineVariant,
+        targetValue = if (habit.isFrozen) {
+            if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF00B8D4)
+        } else MaterialTheme.colorScheme.outlineVariant,
         label = "shieldBorder"
     )
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clickable { onEdit() },
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -155,9 +161,15 @@ fun HabitCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { onEdit() }
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                ) {
                     Text(
                         text = habit.title,
                         style = MaterialTheme.typography.titleMedium,
@@ -259,10 +271,14 @@ fun HabitCard(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val shieldContentColor = if (habit.isFrozen) {
+                            if (isDarkTheme) Color(0xFF18FFFF) else Color(0xFF00838F)
+                        } else MaterialTheme.colorScheme.onSurfaceVariant
+
                         Icon(
                             imageVector = if (habit.isFrozen) Icons.Default.AcUnit else Icons.Outlined.Shield,
                             contentDescription = "Freeze Shield",
-                            tint = if (habit.isFrozen) Color(0xFF00E5FF) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = shieldContentColor,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -270,7 +286,7 @@ fun HabitCard(
                             text = if (habit.isFrozen) "Shield Active" else "Shield Offline",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = if (habit.isFrozen) FontWeight.Bold else FontWeight.Normal,
-                            color = if (habit.isFrozen) Color(0xFF80D8FF) else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = shieldContentColor
                         )
                     }
                 }

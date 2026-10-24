@@ -1,7 +1,6 @@
 package com.example.grimoire.viewmodel
 
 import android.app.Application
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grimoire.data.local.GrimoireDatabase
@@ -115,7 +114,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                                 VaultNotification.Success("Sovereign Vault restored successfully.")
                             )
                         },
-                        onFailure = { error ->
+                        onFailure = { _ ->
                             _vaultNotification.emit(
                                 VaultNotification.Error("Restore rejected: Corrupted schema or invalid JSON.")
                             )
