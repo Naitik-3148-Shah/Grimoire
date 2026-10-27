@@ -46,6 +46,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,6 +69,8 @@ fun SettingsDialog(
     onThemeSelect: (AppThemeMode) -> Unit,
     onDismiss: () -> Unit
 ) {
+    var localTheme by remember { mutableStateOf(currentTheme) }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -168,16 +173,11 @@ fun SettingsDialog(
                     AppThemeMode.values().forEach { mode ->
                         ThemeOptionCard(
                             mode = mode,
-                            isSelected = mode == currentTheme,
-                            onClick = { onThemeSelect(mode) }
+                            isSelected = mode == localTheme,
+                            onClick = { localTheme = mode }
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Live Preview Showcase Card
-                ThemeLivePreviewCard(currentTheme = currentTheme)
 
                 Spacer(modifier = Modifier.height(20.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
@@ -205,7 +205,10 @@ fun SettingsDialog(
                     }
 
                     Button(
-                        onClick = onDismiss,
+                        onClick = {
+                            onThemeSelect(localTheme)
+                            onDismiss()
+                        },
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFD4AF37),
@@ -384,138 +387,4 @@ private fun ColorPreviewDot(color: Color, label: String) {
             .background(color)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), CircleShape)
     )
-}
-
-@Composable
-private fun ThemeLivePreviewCard(currentTheme: AppThemeMode) {
-    val isDark = LocalIsDarkTheme.current
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "LIVE THEME PREVIEW",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 0.5.sp
-                    )
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Text(
-                        text = currentTheme.title,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Sample Mini Habit Card
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, Color(0xFFD4AF37).copy(alpha = 0.4f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFD4AF37).copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Shield,
-                            contentDescription = null,
-                            tint = Color(0xFFD4AF37),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Morning Meditation",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.LocalFireDepartment,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFF9800),
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(2.dp))
-                                Text(
-                                    text = "7d",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        LinearProgressIndicator(
-                            progress = { 0.75f },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp)),
-                            color = Color(0xFFD4AF37),
-                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            strokeCap = StrokeCap.Round
-                        )
-                    }
-                }
-            }
-        }
-    }
 }
