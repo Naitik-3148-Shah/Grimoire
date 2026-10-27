@@ -28,12 +28,14 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            GrimoireTheme {
-                val viewModel: HabitViewModel = viewModel()
-                val habits by viewModel.habits.collectAsState()
+            val viewModel: HabitViewModel = viewModel()
+            val currentTheme by viewModel.themeMode.collectAsState()
+            val habits by viewModel.habits.collectAsState()
 
+            GrimoireTheme(themeMode = currentTheme) {
                 MainScreen(
                     habits = habits,
+                    currentTheme = currentTheme,
                     onEvent = viewModel::onEvent
                 )
             }

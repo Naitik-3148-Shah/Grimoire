@@ -4,10 +4,12 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grimoire.data.local.GrimoireDatabase
+import com.example.grimoire.data.preferences.ThemePreferences
 import com.example.grimoire.data.repository.HabitRepository
 import com.example.grimoire.data.vault.SovereignVaultManager
 import com.example.grimoire.model.HabitEvent
 import com.example.grimoire.model.HabitUiModel
+import com.example.grimoire.ui.theme.AppThemeMode
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,6 +29,10 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     private val database = GrimoireDatabase.getInstance(application)
     private val repository = HabitRepository(database, context = application)
     private val vaultManager = SovereignVaultManager(application, database)
+    private val themePreferences = ThemePreferences(application)
+
+    // Observable active theme flow
+    val themeMode: StateFlow<AppThemeMode> = themePreferences.themeMode
 
     // Reactive stream observed by Naitik Maurya's Compose UI & Widgets
     val habits: StateFlow<List<HabitUiModel>> = repository.habitsFlow
@@ -120,6 +126,11 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                             )
                         }
                     )
+                }
+
+                // Theme Mode Configuration Event Execution
+                is HabitEvent.SetThemeMode -> {
+                    themePreferences.setThemeMode(event.themeMode)
                 }
             }
         }
