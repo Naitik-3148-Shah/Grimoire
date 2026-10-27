@@ -65,4 +65,6 @@ dependencies {
 
     // 4. Kotlinx Serialization (Offline JSON Sovereign Vault)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
+    testImplementation(libs.junit)
 }
