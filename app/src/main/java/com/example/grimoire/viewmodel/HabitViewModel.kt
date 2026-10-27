@@ -1,7 +1,6 @@
 package com.example.grimoire.viewmodel
 
 import android.app.Application
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.grimoire.data.local.GrimoireDatabase
@@ -45,18 +44,47 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             when (event) {
                 is HabitEvent.AddHabit -> {
-                    repository.addHabit(
+                    val habitId = repository.addHabit(
                         title = event.title,
                         iconName = event.iconName,
                         colorHex = event.colorHex,
                         targetPerDay = event.targetPerDay,
                         reminderTime = event.reminderTime
                     )
+                    event.reminderTime?.let { time ->
+                        com.example.grimoire.data.worker.AlarmScheduler.scheduleHabitAlarm(
+                            getApplication(), habitId, event.title, time
+                        )
+                    }
+                }
+                is HabitEvent.EditHabit -> {
+                    repository.updateHabit(
+                        habitId = event.habitId,
+                        title = event.title,
+                        iconName = event.iconName,
+                        colorHex = event.colorHex,
+                        targetPerDay = event.targetPerDay,
+                        reminderTime = event.reminderTime
+                    )
+                    if (event.reminderTime != null) {
+                        com.example.grimoire.data.worker.AlarmScheduler.scheduleHabitAlarm(
+                            getApplication(), event.habitId, event.title, event.reminderTime
+                        )
+                    } else {
+                        com.example.grimoire.data.worker.AlarmScheduler.cancelHabitAlarm(
+                            getApplication(), event.habitId
+                        )
+                    }
                 }
                 is HabitEvent.IncrementHabit -> repository.incrementHabit(event.habitId)
                 is HabitEvent.DecrementHabit -> repository.decrementHabit(event.habitId)
                 is HabitEvent.ToggleFreezeShield -> repository.toggleFreezeShield(event.habitId)
-                is HabitEvent.DeleteHabit -> repository.deleteHabit(event.habitId)
+                is HabitEvent.DeleteHabit -> {
+                    repository.deleteHabit(event.habitId)
+                    com.example.grimoire.data.worker.AlarmScheduler.cancelHabitAlarm(
+                        getApplication(), event.habitId
+                    )
+                }
 
                 // Task A.3: Sovereign Vault Export Event Execution
                 is HabitEvent.ExportVaultToUri -> {
@@ -86,7 +114,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                                 VaultNotification.Success("Sovereign Vault restored successfully.")
                             )
                         },
-                        onFailure = { error ->
+                        onFailure = { _ ->
                             _vaultNotification.emit(
                                 VaultNotification.Error("Restore rejected: Corrupted schema or invalid JSON.")
                             )

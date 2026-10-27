@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -67,13 +69,62 @@ import com.example.grimoire.model.DummyHabits
 import com.example.grimoire.model.HabitEvent
 import com.example.grimoire.model.HabitUiModel
 
+data class CircadianPhase(
+    val title: String,
+    val icon: String,
+    val containerColorLight: Color,
+    val contentColorLight: Color,
+    val containerColorDark: Color,
+    val contentColorDark: Color
+)
+
+fun getCircadianPhase(): CircadianPhase {
+    val hour = java.time.LocalTime.now().hour
+    return when (hour) {
+        in 4..11 -> CircadianPhase(
+            title = "Dawn Vigil",
+            icon = "✦",
+            containerColorLight = Color(0xFFFFF8E1),
+            contentColorLight = Color(0xFFFF8F00),
+            containerColorDark = Color(0xFF423719),
+            contentColorDark = Color(0xFFFFD54F)
+        )
+        in 12..17 -> CircadianPhase(
+            title = "Solar Zenith",
+            icon = "☀️",
+            containerColorLight = Color(0xFFE1F5FE),
+            contentColorLight = Color(0xFF1565C0),
+            containerColorDark = Color(0xFF13364C),
+            contentColorDark = Color(0xFF81D4FA)
+        )
+        in 18..21 -> CircadianPhase(
+            title = "Dusk Ritual",
+            icon = "🌙",
+            containerColorLight = Color(0xFFF3E5F5),
+            contentColorLight = Color(0xFF6A1B9A),
+            containerColorDark = Color(0xFF331C42),
+            contentColorDark = Color(0xFFCE93D8)
+        )
+        else -> CircadianPhase(
+            title = "Midnight Watch",
+            icon = "🛡",
+            containerColorLight = Color(0xFFECEFF1),
+            contentColorLight = Color(0xFF263238),
+            containerColorDark = Color(0xFF161E23),
+            contentColorDark = Color(0xFFB0BEC5)
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     habits: List<HabitUiModel>,
     onEvent: (HabitEvent) -> Unit
 ) {
+    // Add / Edit Habit Dialog State
     var showAddDialog by remember { mutableStateOf(false) }
+    var habitToEdit by remember { mutableStateOf<HabitUiModel?>(null) }
     var showInfoDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
@@ -94,6 +145,7 @@ fun MainScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    val phase = remember { getCircadianPhase() }
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -104,34 +156,26 @@ fun MainScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color(0xFFD4AF37).copy(alpha = 0.15f)
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSystemInDarkTheme()) phase.containerColorDark else phase.containerColorLight
                             ) {
                                 Text(
-                                    text = "Chronos Seal",
+                                    text = "${phase.icon} ${phase.title}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFFD4AF37),
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    fontWeight = FontWeight.SemiBold
+                                    color = if (isSystemInDarkTheme()) phase.contentColorDark else phase.contentColorLight,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showInfoDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "Chronos Seal Rules",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
                     Box {
                         IconButton(onClick = { showMenu = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Sovereign Vault Options",
+                                contentDescription = "Menu Options",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -140,6 +184,22 @@ fun MainScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }
                         ) {
+                            DropdownMenuItem(
+                                text = { Text("Chronos Seal Laws") },
+                                onClick = {
+                                    showMenu = false
+                                    showInfoDialog = true
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = "Info"
+                                    )
+                                }
+                            )
+
+                            HorizontalDivider()
+
                             DropdownMenuItem(
                                 text = { Text("Export Vault (JSON)") },
                                 onClick = {
@@ -177,7 +237,10 @@ fun MainScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { showAddDialog = true },
+                onClick = { 
+                    habitToEdit = null
+                    showAddDialog = true 
+                },
                 icon = { Icon(imageVector = Icons.Default.Add, contentDescription = "Inscribe") },
                 text = { Text("Inscribe Habit", fontWeight = FontWeight.Bold) },
                 containerColor = Color(0xFFD4AF37),
@@ -195,7 +258,10 @@ fun MainScreen(
 
             // Habit List or Empty State
             if (habits.isEmpty()) {
-                GrimoireEmptyState(onInscribeClick = { showAddDialog = true })
+                GrimoireEmptyState(onInscribeClick = { 
+                    habitToEdit = null
+                    showAddDialog = true 
+                })
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -207,6 +273,10 @@ fun MainScreen(
                     ) { habit ->
                         HabitCard(
                             habit = habit,
+                            onEdit = { 
+                                habitToEdit = habit
+                                showAddDialog = true 
+                            },
                             onIncrement = { onEvent(HabitEvent.IncrementHabit(habit.id)) },
                             onDecrement = { onEvent(HabitEvent.DecrementHabit(habit.id)) },
                             onToggleFreeze = { onEvent(HabitEvent.ToggleFreezeShield(habit.id)) },
@@ -218,20 +288,37 @@ fun MainScreen(
         }
     }
 
-    // Add Habit Dialog
+    // Add / Edit Habit Dialog
     if (showAddDialog) {
         AddHabitDialog(
-            onDismiss = { showAddDialog = false },
+            initialHabit = habitToEdit,
+            onDismiss = { 
+                showAddDialog = false 
+                habitToEdit = null
+            },
             onInscribe = { title, iconName, colorHex, targetPerDay, reminderTime ->
-                onEvent(
-                    HabitEvent.AddHabit(
-                        title = title,
-                        iconName = iconName,
-                        colorHex = colorHex,
-                        targetPerDay = targetPerDay,
-                        reminderTime = reminderTime
+                if (habitToEdit != null) {
+                    onEvent(
+                        HabitEvent.EditHabit(
+                            habitId = habitToEdit!!.id,
+                            title = title,
+                            iconName = iconName,
+                            colorHex = colorHex,
+                            targetPerDay = targetPerDay,
+                            reminderTime = reminderTime
+                        )
                     )
-                )
+                } else {
+                    onEvent(
+                        HabitEvent.AddHabit(
+                            title = title,
+                            iconName = iconName,
+                            colorHex = colorHex,
+                            targetPerDay = targetPerDay,
+                            reminderTime = reminderTime
+                        )
+                    )
+                }
             }
         )
     }

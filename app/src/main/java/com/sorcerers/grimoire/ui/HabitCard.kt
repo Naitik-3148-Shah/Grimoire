@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SelfImprovement
@@ -92,6 +94,7 @@ fun getHabitIcon(iconName: String): ImageVector {
 @Composable
 fun HabitCard(
     habit: HabitUiModel,
+    onEdit: () -> Unit,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onToggleFreeze: () -> Unit,
@@ -107,12 +110,18 @@ fun HabitCard(
         label = "habitProgressAnimation"
     )
 
+    val isDarkTheme = isSystemInDarkTheme()
+
     val shieldBgColor by animateColorAsState(
-        targetValue = if (habit.isFrozen) Color(0xFF00E5FF).copy(alpha = 0.18f) else Color.Transparent,
+        targetValue = if (habit.isFrozen) {
+            if (isDarkTheme) Color(0xFF00E5FF).copy(alpha = 0.18f) else Color(0xFFE0F7FA)
+        } else Color.Transparent,
         label = "shieldBg"
     )
     val shieldBorderColor by animateColorAsState(
-        targetValue = if (habit.isFrozen) Color(0xFF00E5FF) else MaterialTheme.colorScheme.outlineVariant,
+        targetValue = if (habit.isFrozen) {
+            if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF00B8D4)
+        } else MaterialTheme.colorScheme.outlineVariant,
         label = "shieldBorder"
     )
 
@@ -152,9 +161,15 @@ fun HabitCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { onEdit() }
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                ) {
                     Text(
                         text = habit.title,
                         style = MaterialTheme.typography.titleMedium,
@@ -185,16 +200,21 @@ fun HabitCard(
                     }
                 }
 
-                IconButton(
-                    onClick = { showDeleteConfirmDialog = true },
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete Habit",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp)
-                    )
+                // Edit & Delete Icons
+                Row {
+                    // Replaced with a unified Edit/Delete logic outside card (e.g. SwipeToDismiss or click)
+                    // We'll leave the delete button here for now, or just let caller handle click on the whole card
+                    IconButton(
+                        onClick = { showDeleteConfirmDialog = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Habit",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 
@@ -251,10 +271,14 @@ fun HabitCard(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val shieldContentColor = if (habit.isFrozen) {
+                            if (isDarkTheme) Color(0xFF18FFFF) else Color(0xFF00838F)
+                        } else MaterialTheme.colorScheme.onSurfaceVariant
+
                         Icon(
                             imageVector = if (habit.isFrozen) Icons.Default.AcUnit else Icons.Outlined.Shield,
                             contentDescription = "Freeze Shield",
-                            tint = if (habit.isFrozen) Color(0xFF00E5FF) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = shieldContentColor,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -262,7 +286,7 @@ fun HabitCard(
                             text = if (habit.isFrozen) "Shield Active" else "Shield Offline",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = if (habit.isFrozen) FontWeight.Bold else FontWeight.Normal,
-                            color = if (habit.isFrozen) Color(0xFF80D8FF) else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = shieldContentColor
                         )
                     }
                 }
@@ -292,25 +316,26 @@ fun HabitCard(
                         if (habit.isCompletedToday) {
                             Surface(
                                 shape = CircleShape,
-                                color = Color(0xFF00E676).copy(alpha = 0.15f)
+                                color = if (isSystemInDarkTheme()) Color(0xFF1B5E20) else Color(0xFFE8F5E9),
+                                border = BorderStroke(1.dp, if (isSystemInDarkTheme()) Color(0xFF4CAF50) else Color(0xFF81C784))
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = "Completed",
-                                        tint = Color(0xFF00E676),
+                                        tint = if (isSystemInDarkTheme()) Color(0xFF69F0AE) else Color(0xFF2E7D32),
                                         modifier = Modifier.size(12.dp)
                                     )
                                     Spacer(modifier = Modifier.width(3.dp))
                                     Text(
                                         text = "Sealed",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color(0xFF00E676),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
+                                        color = if (isSystemInDarkTheme()) Color(0xFF69F0AE) else Color(0xFF2E7D32),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.ExtraBold
                                     )
                                 }
                             }
