@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.glance.appwidget.updateAll
 
 class MidnightRolloverWorker(
     appContext: Context,
@@ -40,6 +41,8 @@ class MidnightRolloverWorker(
             }
         }
 
+        com.example.grimoire.widget.GrimoireGlanceWidget().updateAll(applicationContext)
+        
         Result.success()
     }
 }

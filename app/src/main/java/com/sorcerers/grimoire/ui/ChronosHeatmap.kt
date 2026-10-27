@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import com.example.grimoire.ui.theme.LocalIsDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -81,10 +82,11 @@ fun ChronosHeatmap(
                 val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM d")
                 val dateString = date.format(formatter)
                 
+                val isDark = LocalIsDarkTheme.current
                 val cellColor = if (isMet) {
                     accentColor
                 } else {
-                    if (isSystemInDarkTheme()) Color(0xFF2D2D2D) else Color(0xFFEBEDF0)
+                    if (isDark) Color(0xFF2D2D2D) else Color(0xFFEBEDF0)
                 }
                 
                 var showTooltip by remember { mutableStateOf(false) }

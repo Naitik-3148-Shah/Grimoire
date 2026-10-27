@@ -1,5 +1,7 @@
 package com.example.grimoire.model
 
+import com.example.grimoire.ui.theme.AppThemeMode
+
 sealed interface HabitEvent {
     data class AddHabit(
         val title: String,
@@ -24,4 +26,5 @@ sealed interface HabitEvent {
     data class DeleteHabit(val habitId: Long) : HabitEvent
     data class ExportVaultToUri(val uriString: String) : HabitEvent
     data class ImportVaultFromUri(val uriString: String) : HabitEvent
+    data class SetThemeMode(val themeMode: AppThemeMode) : HabitEvent
 }

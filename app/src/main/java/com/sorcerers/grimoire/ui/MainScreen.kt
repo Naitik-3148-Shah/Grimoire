@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -68,6 +69,8 @@ import androidx.compose.ui.unit.sp
 import com.example.grimoire.model.DummyHabits
 import com.example.grimoire.model.HabitEvent
 import com.example.grimoire.model.HabitUiModel
+import com.example.grimoire.ui.theme.AppThemeMode
+import com.example.grimoire.ui.theme.LocalIsDarkTheme
 
 data class CircadianPhase(
     val title: String,
@@ -120,12 +123,14 @@ fun getCircadianPhase(): CircadianPhase {
 @Composable
 fun MainScreen(
     habits: List<HabitUiModel>,
+    currentTheme: AppThemeMode = AppThemeMode.DARK,
     onEvent: (HabitEvent) -> Unit
 ) {
     // Add / Edit Habit Dialog State
     var showAddDialog by remember { mutableStateOf(false) }
     var habitToEdit by remember { mutableStateOf<HabitUiModel?>(null) }
     var showInfoDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
     // Sovereign Vault Storage Access Framework (SAF) Launchers
@@ -140,6 +145,8 @@ fun MainScreen(
     ) { uri: Uri? ->
         uri?.let { onEvent(HabitEvent.ImportVaultFromUri(it.toString())) }
     }
+
+    val isDark = LocalIsDarkTheme.current
 
     Scaffold(
         topBar = {
@@ -157,12 +164,12 @@ fun MainScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = if (isSystemInDarkTheme()) phase.containerColorDark else phase.containerColorLight
+                                color = if (isDark) phase.containerColorDark else phase.containerColorLight
                             ) {
                                 Text(
                                     text = "${phase.icon} ${phase.title}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (isSystemInDarkTheme()) phase.contentColorDark else phase.contentColorLight,
+                                    color = if (isDark) phase.contentColorDark else phase.contentColorLight,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                     fontWeight = FontWeight.Bold
                                 )
@@ -171,6 +178,14 @@ fun MainScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showSettingsDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
                     Box {
                         IconButton(onClick = { showMenu = true }) {
                             Icon(
@@ -184,6 +199,22 @@ fun MainScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }
                         ) {
+                            DropdownMenuItem(
+                                text = { Text("Settings") },
+                                onClick = {
+                                    showMenu = false
+                                    showSettingsDialog = true
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = "Settings"
+                                    )
+                                }
+                            )
+
+                            HorizontalDivider()
+
                             DropdownMenuItem(
                                 text = { Text("Chronos Seal Laws") },
                                 onClick = {
@@ -363,6 +394,15 @@ fun MainScreen(
             }
         )
     }
+
+    // Settings Menu Dialog (Theme Sanctuary & Arcane Configurations)
+    if (showSettingsDialog) {
+        SettingsDialog(
+            currentTheme = currentTheme,
+            onThemeSelect = { onEvent(HabitEvent.SetThemeMode(it)) },
+            onDismiss = { showSettingsDialog = false }
+        )
+    }
 }
 
 @Composable
@@ -521,6 +561,7 @@ private fun MainScreenPreview() {
     MaterialTheme {
         MainScreen(
             habits = DummyHabits.sampleList,
+            currentTheme = AppThemeMode.DARK,
             onEvent = {}
         )
     }
