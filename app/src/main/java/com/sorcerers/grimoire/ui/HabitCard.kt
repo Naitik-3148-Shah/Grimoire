@@ -67,6 +67,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.grimoire.model.HabitUiModel
+import com.example.grimoire.ui.theme.LocalIsDarkTheme
 
 fun parseHexColor(hex: String, fallback: Color = Color(0xFFD4AF37)): Color {
     return try {
@@ -110,7 +111,7 @@ fun HabitCard(
         label = "habitProgressAnimation"
     )
 
-    val isDarkTheme = isSystemInDarkTheme()
+    val isDarkTheme = LocalIsDarkTheme.current
 
     val shieldBgColor by animateColorAsState(
         targetValue = if (habit.isFrozen) {
@@ -316,8 +317,8 @@ fun HabitCard(
                         if (habit.isCompletedToday) {
                             Surface(
                                 shape = CircleShape,
-                                color = if (isSystemInDarkTheme()) Color(0xFF1B5E20) else Color(0xFFE8F5E9),
-                                border = BorderStroke(1.dp, if (isSystemInDarkTheme()) Color(0xFF4CAF50) else Color(0xFF81C784))
+                                color = if (isDarkTheme) Color(0xFF1B5E20) else Color(0xFFE8F5E9),
+                                border = BorderStroke(1.dp, if (isDarkTheme) Color(0xFF4CAF50) else Color(0xFF81C784))
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -326,14 +327,14 @@ fun HabitCard(
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = "Completed",
-                                        tint = if (isSystemInDarkTheme()) Color(0xFF69F0AE) else Color(0xFF2E7D32),
+                                        tint = if (isDarkTheme) Color(0xFF69F0AE) else Color(0xFF2E7D32),
                                         modifier = Modifier.size(12.dp)
                                     )
                                     Spacer(modifier = Modifier.width(3.dp))
                                     Text(
                                         text = "Sealed",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = if (isSystemInDarkTheme()) Color(0xFF69F0AE) else Color(0xFF2E7D32),
+                                        color = if (isDarkTheme) Color(0xFF69F0AE) else Color(0xFF2E7D32),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.ExtraBold
                                     )
