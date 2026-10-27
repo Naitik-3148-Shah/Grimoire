@@ -28,7 +28,7 @@ enum class AppThemeMode(
     ),
     AMOLED(
         title = "AMOLED Mode",
-        subtitle = "Pure pitch black (#000000) for OLED panels & battery efficiency",
+        subtitle = "Pure pitch black for OLED panels & battery efficiency",
         previewPrimary = Color(0xFFD4AF37),
         previewBackground = Color(0xFF000000),
         previewSurface = Color(0xFF0F0F0F),
@@ -36,7 +36,7 @@ enum class AppThemeMode(
     ),
     EXPRESSIVE(
         title = "MD3E Expressive",
-        subtitle = "Material 3 Expressive vibrant chroma & jewel plum undertones",
+        subtitle = "Material 3 Expressive",
         previewPrimary = Color(0xFF9D65FF),
         previewBackground = Color(0xFF0E0A17),
         previewSurface = Color(0xFF1F1730),
