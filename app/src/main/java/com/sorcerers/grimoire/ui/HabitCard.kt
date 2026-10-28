@@ -1,7 +1,11 @@
 package com.sorcerers.grimoire.ui
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -108,6 +112,10 @@ fun HabitCard(
 
     val animatedProgress by animateFloatAsState(
         targetValue = habit.completionProgress,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
         label = "habitProgressAnimation"
     )
 
@@ -117,12 +125,14 @@ fun HabitCard(
         targetValue = if (habit.isFrozen) {
             if (isDarkTheme) Color(0xFF00E5FF).copy(alpha = 0.18f) else Color(0xFFE0F7FA)
         } else Color.Transparent,
+        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
         label = "shieldBg"
     )
     val shieldBorderColor by animateColorAsState(
         targetValue = if (habit.isFrozen) {
             if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF00B8D4)
         } else MaterialTheme.colorScheme.outlineVariant,
+        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
         label = "shieldBorder"
     )
 
