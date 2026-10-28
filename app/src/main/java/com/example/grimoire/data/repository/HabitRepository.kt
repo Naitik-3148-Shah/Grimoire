@@ -17,6 +17,10 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import android.content.Context
+import androidx.glance.appwidget.updateAll
+import com.example.grimoire.widget.GrimoireGlanceWidget
+
+import kotlinx.coroutines.flow.first
 
 class HabitRepository(
     private val database: GrimoireDatabase,
@@ -24,12 +28,25 @@ class HabitRepository(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val context: Context? = null
 ) {
-    private val transactionMutex = Mutex()
+    companion object {
+        private val transactionMutex = Mutex()
+    }
+    
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     val habitsFlow: Flow<List<HabitUiModel>> = habitDao.observeAllWithLogs()
         .map { list -> list.map { it.toUiModel() } }
         .flowOn(ioDispatcher)
+
+    suspend fun getHabitsSync(): List<HabitUiModel> = withContext(ioDispatcher) {
+        val habits = habitDao.getAllHabitsSync()
+        val allLogs = habitDao.getAllLogsSync()
+        
+        habits.map { habit ->
+            val logsForHabit = allLogs.filter { it.habitId == habit.id }
+            HabitWithLogs(habit, logsForHabit).toUiModel()
+        }
+    }
 
     suspend fun addHabit(
         title: String,
@@ -45,7 +62,9 @@ class HabitRepository(
             targetPerDay = targetPerDay.coerceAtLeast(1),
             reminderTime = reminderTime
         )
-        habitDao.insertHabit(habit)
+        val insertedId = habitDao.insertHabit(habit)
+        context?.let { GrimoireGlanceWidget().updateAll(it) }
+        insertedId
     }
 
     suspend fun updateHabit(
@@ -65,6 +84,7 @@ class HabitRepository(
             reminderTime = reminderTime
         )
         habitDao.updateHabit(updated)
+        context?.let { GrimoireGlanceWidget().updateAll(it) }
     }
 
     suspend fun incrementHabit(habitId: Long) = withContext(ioDispatcher) {
@@ -97,6 +117,7 @@ class HabitRepository(
                     )
                 )
             }
+            context?.let { GrimoireGlanceWidget().updateAll(it) }
         }
     }
 
@@ -121,17 +142,20 @@ class HabitRepository(
                 val updatedStreak = (habit.currentStreak - 1).coerceAtLeast(0)
                 habitDao.updateHabit(habit.copy(currentStreak = updatedStreak))
             }
+            context?.let { GrimoireGlanceWidget().updateAll(it) }
         }
     }
 
     suspend fun toggleFreezeShield(habitId: Long) = withContext(ioDispatcher) {
         val habit = habitDao.getHabitById(habitId) ?: return@withContext
         habitDao.updateHabit(habit.copy(isFrozen = !habit.isFrozen))
+        context?.let { GrimoireGlanceWidget().updateAll(it) }
     }
 
     suspend fun deleteHabit(habitId: Long) = withContext(ioDispatcher) {
         val habit = habitDao.getHabitById(habitId) ?: return@withContext
         habitDao.deleteHabit(habit)
+        context?.let { GrimoireGlanceWidget().updateAll(it) }
     }
 
     // Helper extension mapping Entities -> Shared UI Contract
