@@ -72,7 +72,6 @@ private val ARCANE_PALETTE = listOf(
     "#26A69A"  // Runic Teal
 )
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddHabitDialog(
     initialHabit: HabitUiModel? = null,

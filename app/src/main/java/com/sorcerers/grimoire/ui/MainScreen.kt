@@ -3,6 +3,17 @@ package com.sorcerers.grimoire.ui
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -130,7 +141,7 @@ fun MainScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var habitToEdit by remember { mutableStateOf<HabitUiModel?>(null) }
     var showInfoDialog by remember { mutableStateOf(false) }
-    var showSettingsDialog by remember { mutableStateOf(false) }
+    var showSettingsPage by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
     // Sovereign Vault Storage Access Framework (SAF) Launchers
@@ -148,260 +159,302 @@ fun MainScreen(
 
     val isDark = LocalIsDarkTheme.current
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    val phase = remember { getCircadianPhase() }
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Grimoire",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color(0xFFD4AF37)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isDark) phase.containerColorDark else phase.containerColorLight
-                            ) {
-                                Text(
-                                    text = "${phase.icon} ${phase.title}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (isDark) phase.contentColorDark else phase.contentColorLight,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                    fontWeight = FontWeight.Bold
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        AnimatedContent(
+            targetState = showSettingsPage,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface),
+            transitionSpec = {
+                val slideSpec = spring<IntOffset>(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+                if (targetState) {
+                    // Opening Settings: Settings slides in from right over Home screen
+                    (slideInHorizontally(animationSpec = slideSpec) { width -> width }
+                        .togetherWith(slideOutHorizontally(animationSpec = slideSpec) { width -> -width / 4 }))
+                        .apply { targetContentZIndex = 1f }
+                } else {
+                    // Returning to Home: Settings slides off to right on top, revealing Home underneath
+                    (slideInHorizontally(animationSpec = slideSpec) { width -> -width / 4 }
+                        .togetherWith(slideOutHorizontally(animationSpec = slideSpec) { width -> width }))
+                        .apply { targetContentZIndex = -1f }
+                }
+            },
+            label = "SettingsPageSlideTransition"
+        ) { isSettingsOpen ->
+        if (isSettingsOpen) {
+            SettingsScreen(
+                currentTheme = currentTheme,
+                onApply = { selectedTheme ->
+                    onEvent(HabitEvent.SetThemeMode(selectedTheme))
+                    showSettingsPage = false
+                },
+                onClose = {
+                    showSettingsPage = false
+                }
+            )
+        } else {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            val phase = remember { getCircadianPhase() }
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Grimoire",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color(0xFFD4AF37)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = if (isDark) phase.containerColorDark else phase.containerColorLight
+                                    ) {
+                                        Text(
+                                            text = "${phase.icon} ${phase.title}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (isDark) phase.contentColorDark else phase.contentColorLight,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { showSettingsPage = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Box {
+                                IconButton(onClick = { showMenu = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = "Menu Options",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Settings") },
+                                        onClick = {
+                                            showMenu = false
+                                            showSettingsPage = true
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Settings,
+                                                contentDescription = "Settings"
+                                            )
+                                        }
+                                    )
+
+                                    HorizontalDivider()
+
+                                    DropdownMenuItem(
+                                        text = { Text("Chronos Seal Laws") },
+                                        onClick = {
+                                            showMenu = false
+                                            showInfoDialog = true
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Info,
+                                                contentDescription = "Info"
+                                            )
+                                        }
+                                    )
+
+                                    HorizontalDivider()
+
+                                    DropdownMenuItem(
+                                        text = { Text("Export Vault (JSON)") },
+                                        onClick = {
+                                            showMenu = false
+                                            exportVaultLauncher.launch("grimoire_sovereign_vault.json")
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.CloudDownload,
+                                                contentDescription = "Export"
+                                            )
+                                        }
+                                    )
+
+                                    DropdownMenuItem(
+                                        text = { Text("Restore Vault (JSON)") },
+                                        onClick = {
+                                            showMenu = false
+                                            importVaultLauncher.launch(arrayOf("application/json"))
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.CloudUpload,
+                                                contentDescription = "Restore"
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
+                    )
+                },
+                floatingActionButton = {
+                    ExtendedFloatingActionButton(
+                        onClick = { 
+                            habitToEdit = null
+                            showAddDialog = true 
+                        },
+                        icon = { Icon(imageVector = Icons.Default.Add, contentDescription = "Inscribe") },
+                        text = { Text("Inscribe Habit", fontWeight = FontWeight.Bold) },
+                        containerColor = Color(0xFFD4AF37),
+                        contentColor = Color.Black
+                    )
+                }
+            ) { innerPadding ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    // Dashboard Summary Banner
+                    GrimoireDashboardBanner(habits = habits)
+
+                    // Habit List or Empty State
+                    if (habits.isEmpty()) {
+                        GrimoireEmptyState(onInscribeClick = { 
+                            habitToEdit = null
+                            showAddDialog = true 
+                        })
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(top = 4.dp, bottom = 88.dp)
+                        ) {
+                            items(
+                                items = habits,
+                                key = { it.id }
+                            ) { habit ->
+                                HabitCard(
+                                    habit = habit,
+                                    modifier = Modifier.animateItem(
+                                        fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                        fadeOutSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                        placementSpec = spring(
+                                            dampingRatio = Spring.DampingRatioNoBouncy,
+                                            stiffness = Spring.StiffnessMediumLow
+                                        )
+                                    ),
+                                    onEdit = { 
+                                        habitToEdit = habit
+                                        showAddDialog = true 
+                                    },
+                                    onIncrement = { onEvent(HabitEvent.IncrementHabit(habit.id)) },
+                                    onDecrement = { onEvent(HabitEvent.DecrementHabit(habit.id)) },
+                                    onToggleFreeze = { onEvent(HabitEvent.ToggleFreezeShield(habit.id)) },
+                                    onDelete = { onEvent(HabitEvent.DeleteHabit(habit.id)) }
                                 )
                             }
                         }
                     }
-                },
-                actions = {
-                    IconButton(onClick = { showSettingsDialog = true }) {
+                }
+            }
+
+            // Add / Edit Habit Dialog
+            if (showAddDialog) {
+                AddHabitDialog(
+                    initialHabit = habitToEdit,
+                    onDismiss = { 
+                        showAddDialog = false 
+                        habitToEdit = null
+                    },
+                    onInscribe = { title, iconName, colorHex, targetPerDay, reminderTime ->
+                        if (habitToEdit != null) {
+                            onEvent(
+                                HabitEvent.EditHabit(
+                                    habitId = habitToEdit!!.id,
+                                    title = title,
+                                    iconName = iconName,
+                                    colorHex = colorHex,
+                                    targetPerDay = targetPerDay,
+                                    reminderTime = reminderTime
+                                )
+                            )
+                        } else {
+                            onEvent(
+                                HabitEvent.AddHabit(
+                                    title = title,
+                                    iconName = iconName,
+                                    colorHex = colorHex,
+                                    targetPerDay = targetPerDay,
+                                    reminderTime = reminderTime
+                                )
+                            )
+                        }
+                    }
+                )
+            }
+
+            // Chronos Seal Rules Info Dialog
+            if (showInfoDialog) {
+                AlertDialog(
+                    onDismissRequest = { showInfoDialog = false },
+                    icon = {
                         Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            imageVector = Icons.Default.Shield,
+                            contentDescription = null,
+                            tint = Color(0xFFD4AF37),
+                            modifier = Modifier.size(28.dp)
                         )
-                    }
-
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Menu Options",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    title = { Text(text = "Chronos Seal Laws", fontWeight = FontWeight.Bold) },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "• Midnight Rollover (00:00:00): Every midnight, the temporal daemon verifies daily habit targets.",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "• Streak Progression: Completing your daily target increases your active streak count.",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "• Freeze Shield: Activate a shield to protect your streak on days you cannot fulfill the target. The shield is consumed at midnight to prevent streak loss.",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "• Sovereign Vault: 100% offline local JSON backups ensure your records remain under your sole ownership.",
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
-
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Settings") },
-                                onClick = {
-                                    showMenu = false
-                                    showSettingsDialog = true
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Settings,
-                                        contentDescription = "Settings"
-                                    )
-                                }
-                            )
-
-                            HorizontalDivider()
-
-                            DropdownMenuItem(
-                                text = { Text("Chronos Seal Laws") },
-                                onClick = {
-                                    showMenu = false
-                                    showInfoDialog = true
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Info,
-                                        contentDescription = "Info"
-                                    )
-                                }
-                            )
-
-                            HorizontalDivider()
-
-                            DropdownMenuItem(
-                                text = { Text("Export Vault (JSON)") },
-                                onClick = {
-                                    showMenu = false
-                                    exportVaultLauncher.launch("grimoire_sovereign_vault.json")
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.CloudDownload,
-                                        contentDescription = "Export"
-                                    )
-                                }
-                            )
-
-                            DropdownMenuItem(
-                                text = { Text("Restore Vault (JSON)") },
-                                onClick = {
-                                    showMenu = false
-                                    importVaultLauncher.launch(arrayOf("application/json"))
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.CloudUpload,
-                                        contentDescription = "Restore"
-                                    )
-                                }
-                            )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showInfoDialog = false }) {
+                            Text(text = "Understood")
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { 
-                    habitToEdit = null
-                    showAddDialog = true 
-                },
-                icon = { Icon(imageVector = Icons.Default.Add, contentDescription = "Inscribe") },
-                text = { Text("Inscribe Habit", fontWeight = FontWeight.Bold) },
-                containerColor = Color(0xFFD4AF37),
-                contentColor = Color.Black
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            // Dashboard Summary Banner
-            GrimoireDashboardBanner(habits = habits)
-
-            // Habit List or Empty State
-            if (habits.isEmpty()) {
-                GrimoireEmptyState(onInscribeClick = { 
-                    habitToEdit = null
-                    showAddDialog = true 
-                })
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 4.dp, bottom = 88.dp)
-                ) {
-                    items(
-                        items = habits,
-                        key = { it.id }
-                    ) { habit ->
-                        HabitCard(
-                            habit = habit,
-                            onEdit = { 
-                                habitToEdit = habit
-                                showAddDialog = true 
-                            },
-                            onIncrement = { onEvent(HabitEvent.IncrementHabit(habit.id)) },
-                            onDecrement = { onEvent(HabitEvent.DecrementHabit(habit.id)) },
-                            onToggleFreeze = { onEvent(HabitEvent.ToggleFreezeShield(habit.id)) },
-                            onDelete = { onEvent(HabitEvent.DeleteHabit(habit.id)) }
-                        )
-                    }
-                }
             }
         }
     }
-
-    // Add / Edit Habit Dialog
-    if (showAddDialog) {
-        AddHabitDialog(
-            initialHabit = habitToEdit,
-            onDismiss = { 
-                showAddDialog = false 
-                habitToEdit = null
-            },
-            onInscribe = { title, iconName, colorHex, targetPerDay, reminderTime ->
-                if (habitToEdit != null) {
-                    onEvent(
-                        HabitEvent.EditHabit(
-                            habitId = habitToEdit!!.id,
-                            title = title,
-                            iconName = iconName,
-                            colorHex = colorHex,
-                            targetPerDay = targetPerDay,
-                            reminderTime = reminderTime
-                        )
-                    )
-                } else {
-                    onEvent(
-                        HabitEvent.AddHabit(
-                            title = title,
-                            iconName = iconName,
-                            colorHex = colorHex,
-                            targetPerDay = targetPerDay,
-                            reminderTime = reminderTime
-                        )
-                    )
-                }
-            }
-        )
-    }
-
-    // Chronos Seal Rules Info Dialog
-    if (showInfoDialog) {
-        AlertDialog(
-            onDismissRequest = { showInfoDialog = false },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Shield,
-                    contentDescription = null,
-                    tint = Color(0xFFD4AF37),
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            title = { Text(text = "Chronos Seal Laws", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "• Midnight Rollover (00:00:00): Every midnight, the temporal daemon verifies daily habit targets.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "• Streak Progression: Completing your daily target increases your active streak count.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "• Freeze Shield: Activate a shield to protect your streak on days you cannot fulfill the target. The shield is consumed at midnight to prevent streak loss.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "• Sovereign Vault: 100% offline local JSON backups ensure your records remain under your sole ownership.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showInfoDialog = false }) {
-                    Text(text = "Understood")
-                }
-            }
-        )
-    }
-
-    // Settings Menu Dialog (Theme Sanctuary & Arcane Configurations)
-    if (showSettingsDialog) {
-        SettingsDialog(
-            currentTheme = currentTheme,
-            onThemeSelect = { onEvent(HabitEvent.SetThemeMode(it)) },
-            onDismiss = { showSettingsDialog = false }
-        )
     }
 }
 

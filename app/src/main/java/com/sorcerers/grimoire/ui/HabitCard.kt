@@ -1,7 +1,11 @@
 package com.sorcerers.grimoire.ui
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -29,8 +33,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SelfImprovement
@@ -79,14 +83,14 @@ fun parseHexColor(hex: String, fallback: Color = Color(0xFFD4AF37)): Color {
 
 fun getHabitIcon(iconName: String): ImageVector {
     return when (iconName.lowercase()) {
-        "book", "study", "read" -> Icons.Default.MenuBook
+        "book", "study", "read" -> Icons.AutoMirrored.Filled.MenuBook
         "water", "hydration", "drink" -> Icons.Default.WaterDrop
         "fire", "flame" -> Icons.Default.LocalFireDepartment
         "fitness", "gym", "workout" -> Icons.Default.FitnessCenter
         "meditation", "mind", "zen" -> Icons.Default.SelfImprovement
         "code", "dev", "hack" -> Icons.Default.Code
         "sleep", "rest" -> Icons.Default.Bedtime
-        "run", "walk", "jog" -> Icons.Default.DirectionsRun
+        "run", "walk", "jog" -> Icons.AutoMirrored.Filled.DirectionsRun
         "shield", "guard" -> Icons.Default.Shield
         else -> Icons.Default.Star
     }
@@ -108,6 +112,10 @@ fun HabitCard(
 
     val animatedProgress by animateFloatAsState(
         targetValue = habit.completionProgress,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
         label = "habitProgressAnimation"
     )
 
@@ -117,12 +125,14 @@ fun HabitCard(
         targetValue = if (habit.isFrozen) {
             if (isDarkTheme) Color(0xFF00E5FF).copy(alpha = 0.18f) else Color(0xFFE0F7FA)
         } else Color.Transparent,
+        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
         label = "shieldBg"
     )
     val shieldBorderColor by animateColorAsState(
         targetValue = if (habit.isFrozen) {
             if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF00B8D4)
         } else MaterialTheme.colorScheme.outlineVariant,
+        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
         label = "shieldBorder"
     )
 
