@@ -33,8 +33,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SelfImprovement
@@ -83,14 +83,14 @@ fun parseHexColor(hex: String, fallback: Color = Color(0xFFD4AF37)): Color {
 
 fun getHabitIcon(iconName: String): ImageVector {
     return when (iconName.lowercase()) {
-        "book", "study", "read" -> Icons.Default.MenuBook
+        "book", "study", "read" -> Icons.AutoMirrored.Filled.MenuBook
         "water", "hydration", "drink" -> Icons.Default.WaterDrop
         "fire", "flame" -> Icons.Default.LocalFireDepartment
         "fitness", "gym", "workout" -> Icons.Default.FitnessCenter
         "meditation", "mind", "zen" -> Icons.Default.SelfImprovement
         "code", "dev", "hack" -> Icons.Default.Code
         "sleep", "rest" -> Icons.Default.Bedtime
-        "run", "walk", "jog" -> Icons.Default.DirectionsRun
+        "run", "walk", "jog" -> Icons.AutoMirrored.Filled.DirectionsRun
         "shield", "guard" -> Icons.Default.Shield
         else -> Icons.Default.Star
     }
