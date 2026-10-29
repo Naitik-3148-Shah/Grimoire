@@ -10,6 +10,7 @@ import com.example.grimoire.data.vault.SovereignVaultManager
 import com.example.grimoire.model.HabitEvent
 import com.example.grimoire.model.HabitUiModel
 import com.example.grimoire.ui.theme.AppThemeMode
+import com.example.grimoire.widget.updateGrimoireWidget
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -119,6 +120,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                             _vaultNotification.emit(
                                 VaultNotification.Success("Sovereign Vault restored successfully.")
                             )
+                            updateGrimoireWidget(getApplication())
                         },
                         onFailure = { _ ->
                             _vaultNotification.emit(
@@ -131,6 +133,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                 // Theme Mode Configuration Event Execution
                 is HabitEvent.SetThemeMode -> {
                     themePreferences.setThemeMode(event.themeMode)
+                    updateGrimoireWidget(getApplication())
                 }
             }
         }
