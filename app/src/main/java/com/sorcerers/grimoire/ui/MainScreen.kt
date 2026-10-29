@@ -4,10 +4,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -93,8 +91,7 @@ data class CircadianPhase(
 )
 
 fun getCircadianPhase(): CircadianPhase {
-    val hour = java.time.LocalTime.now().hour
-    return when (hour) {
+    return when (java.time.LocalTime.now().hour) {
         in 4..11 -> CircadianPhase(
             title = "Dawn Vigil",
             icon = "✦",

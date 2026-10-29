@@ -2,7 +2,7 @@ package com.example.grimoire
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.drawable.ColorDrawable
+import androidx.core.graphics.drawable.toDrawable
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
             GrimoireTheme(themeMode = currentTheme) {
                 val surfaceColor = MaterialTheme.colorScheme.surface
                 SideEffect {
-                    window.setBackgroundDrawable(ColorDrawable(surfaceColor.toArgb()))
+                    window.setBackgroundDrawable(surfaceColor.toArgb().toDrawable())
                 }
 
                 Surface(

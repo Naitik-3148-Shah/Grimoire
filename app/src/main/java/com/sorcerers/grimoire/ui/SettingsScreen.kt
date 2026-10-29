@@ -196,7 +196,7 @@ fun SettingsScreen(
 
                     // Theme Option Cards inside the Theme Section
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        AppThemeMode.values().forEach { mode ->
+                        AppThemeMode.entries.forEach { mode ->
                             ThemeOptionCard(
                                 mode = mode,
                                 isSelected = mode == selectedTheme,
