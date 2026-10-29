@@ -1,6 +1,6 @@
 # Grimoire — The Chronos Seal
 
-**Code Sangam 2026 // Droidrush (Computer Club, MNNIT Allahabad)**  
+**Code Sangam 2026 // Droidrush (Computer Coding Club, MNNIT Allahabad)**  
 **Team Name:** SORCERERS (Team ID: 66)  
 **Problem Statement:** 03 — The Chronos Seal  
 
