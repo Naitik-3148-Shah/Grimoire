@@ -41,7 +41,7 @@ class MidnightRolloverWorker(
             }
         }
 
-        com.example.grimoire.widget.GrimoireGlanceWidget().updateAll(applicationContext)
+        com.example.grimoire.widget.updateGrimoireWidget(applicationContext)
         
         Result.success()
     }

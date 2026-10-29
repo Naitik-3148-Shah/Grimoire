@@ -17,8 +17,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import android.content.Context
-import androidx.glance.appwidget.updateAll
-import com.example.grimoire.widget.GrimoireGlanceWidget
+import com.example.grimoire.widget.updateGrimoireWidget
 
 import kotlinx.coroutines.flow.first
 
@@ -63,7 +62,7 @@ class HabitRepository(
             reminderTime = reminderTime
         )
         val insertedId = habitDao.insertHabit(habit)
-        context?.let { GrimoireGlanceWidget().updateAll(it) }
+        context?.let { updateGrimoireWidget(it) }
         insertedId
     }
 
@@ -84,7 +83,7 @@ class HabitRepository(
             reminderTime = reminderTime
         )
         habitDao.updateHabit(updated)
-        context?.let { GrimoireGlanceWidget().updateAll(it) }
+        context?.let { updateGrimoireWidget(it) }
     }
 
     suspend fun incrementHabit(habitId: Long) = withContext(ioDispatcher) {
@@ -117,7 +116,7 @@ class HabitRepository(
                     )
                 )
             }
-            context?.let { GrimoireGlanceWidget().updateAll(it) }
+            context?.let { updateGrimoireWidget(it) }
         }
     }
 
@@ -142,20 +141,20 @@ class HabitRepository(
                 val updatedStreak = (habit.currentStreak - 1).coerceAtLeast(0)
                 habitDao.updateHabit(habit.copy(currentStreak = updatedStreak))
             }
-            context?.let { GrimoireGlanceWidget().updateAll(it) }
+            context?.let { updateGrimoireWidget(it) }
         }
     }
 
     suspend fun toggleFreezeShield(habitId: Long) = withContext(ioDispatcher) {
         val habit = habitDao.getHabitById(habitId) ?: return@withContext
         habitDao.updateHabit(habit.copy(isFrozen = !habit.isFrozen))
-        context?.let { GrimoireGlanceWidget().updateAll(it) }
+        context?.let { updateGrimoireWidget(it) }
     }
 
     suspend fun deleteHabit(habitId: Long) = withContext(ioDispatcher) {
         val habit = habitDao.getHabitById(habitId) ?: return@withContext
         habitDao.deleteHabit(habit)
-        context?.let { GrimoireGlanceWidget().updateAll(it) }
+        context?.let { updateGrimoireWidget(it) }
     }
 
     // Helper extension mapping Entities -> Shared UI Contract

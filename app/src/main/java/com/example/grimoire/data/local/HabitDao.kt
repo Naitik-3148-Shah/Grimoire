@@ -16,7 +16,7 @@ interface HabitDao {
     @Query("SELECT * FROM habits ORDER BY id DESC")
     fun observeAllWithLogs(): Flow<List<HabitWithLogs>>
 
-    @Query("SELECT * FROM habits")
+    @Query("SELECT * FROM habits ORDER BY id DESC")
     suspend fun getAllHabitsSync(): List<HabitEntity>
 
     @Query("SELECT * FROM habit_logs")
